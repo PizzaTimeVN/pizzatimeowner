@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Time Owner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #ffffff;
+        }
+
+        #loginBox {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #loginBox h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #2c3e50;
+        }
+
+        #loginBox > div {
+            margin-bottom: 16px;
+        }
+
+        #loginBox label {
+            display: block;
+            margin-bottom: 6px;
+            color: #34495e;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        #loginBox input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        #loginBox input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        /* Main App */
+        #mainApp {
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 0 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .navbar h1 {
+            font-size: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* Main Menu */
+        #mainMenu {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 24px;
+        }
+
+        #mainMenu h2 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .menu-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .menu-card-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .menu-card h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .menu-card p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .back-btn {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+        }
+
+        .tab-header {
+            margin-bottom: 32px;
+        }
+
+        .tab-header h2 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .tab-header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* Filters/Controls */
+        .filters {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #34495e;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .filter-group select[multiple] {
+            min-height: 100px;
+        }
+
+        /* Checkbox Group */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+
+        .checkbox-item span {
+            font-size: 14px;
+            color: #2c3e50;
+            user-select: none;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .stat-card h3 {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* Charts */
+        .chart-wrapper,
+        .chart-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .chart-card h3 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        th {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            color: #34495e;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <div id="loginBox">
+            <h2>Đăng nhập - Pizza Time</h2>
+            <div>
+                <label>ID</label>
+                <input id="userId" type="text" placeholder="owner or admin" />
+            </div>
+            <div>
+                <label>Mật khẩu</label>
+                <input id="userPassword" type="password" placeholder="password" />
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button onclick="login(event)" class="btn">Đăng nhập</button>
+            </div>
+            <div id="loginError" class="error" style="display:none;">Sai ID hoặc mật khẩu</div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-content">
+                <h1>🍕 Pizza Time Owner</h1>
+                <button class="btn" onclick="logout()">Đăng xuất</button>
+            </div>
+        </nav>
+
+        <!-- Main Menu -->
+        <div id="mainMenu">
+            <h2>Chọn chức năng</h2>
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showTab('salesTab')">
+                    <div class="menu-card-icon">💰</div>
+                    <h3>Doanh thu</h3>
+                    <p>Xem báo cáo doanh thu theo ngày và cửa hàng</p>
+                </div>
+                <div class="menu-card" onclick="showTab('quantityTab')">
+                    <div class="menu-card-icon">📊</div>
+                    <h3>Số lượng bán</h3>
+                    <p>Phân tích số lượng bán theo loại sản phẩm</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Tab -->
+        <div id="salesTab" class="hidden">
+            <div class="tab-content">
+                <button class="back-btn" onclick="showMainMenu()">← Quay lại</button>
+                
+                <div class="tab-header">
+                    <h2>Báo cáo doanh thu</h2>
+                    <p>Theo dõi doanh thu theo phương thức thanh toán và cửa hàng</p>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Loại thời gian</label>
+                        <select id="dateTypeSale">
+                            <option value="single">Ngày cố định</option>
+                            <option value="range">Khoảng thời gian</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Từ ngày</label>
+                        <input type="date" id="startDateSale">
+                    </div>
+
+                    <div class="filter-group" id="endDateGroupSale" style="display:none;">
+                        <label>Đến ngày</label>
+                        <input type="date" id="endDateSale">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Chọn quán</label>
+                        <div class="checkbox-group" id="storeCheckboxGroup">
+                            <label class="checkbox-item">
+                                <input type="checkbox" value="all" checked onchange="handleAllStoresCheckbox(this)">
+                                <span>Tất cả các quán</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group" style="align-self:flex-end;">
+                        <button class="btn" onclick="fetchSaleData()">Xem báo cáo</button>
+                    </div>
+                </div>
+
+                <div id="errorSale" class="error" style="display:none;"></div>
+                <div id="loadingSale" class="loading" style="display:none;">Đang tải dữ liệu...</div>
+
+                <div id="resultsSale" style="display:none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Tiền Mặt</h3>
+                            <div class="value" id="cashRevenue">0 đ</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Chuyển Khoản</h3>
+                            <div class="value" id="transferRevenue">0 đ</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Grab</h3>
+                            <div class="value" id="grabRevenue">0 đ</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Shopee</h3>
+                            <div class="value" id="shopeeRevenue">0 đ</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Tổng Doanh Thu</h3>
+                            <div class="value" id="totalRevenue">0 đ</div>
+                        </div>
+                    </div>
+
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <h3 id="chartTitle">Cơ Cấu Doanh Thu Theo Quán</h3>
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                        <div class="chart-card" id="trendChartCard" style="display:none;">
+                            <h3>Xu hướng doanh thu theo ngày</h3>
+                            <canvas id="revenueTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quantity Tab -->
+        <div id="quantityTab" class="hidden">
+            <div class="tab-content">
+                <button class="back-btn" onclick="showMainMenu()">← Quay lại</button>
+                
+                <div class="tab-header">
+                    <h2>Số lượng bán theo loại</h2>
+                    <p>Phân tích số lượng bán theo danh mục và cửa hàng</p>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Loại thời gian</label>
+                        <select id="dateTypeQty">
+                            <option value="single">Ngày cố định</option>
+                            <option value="range">Khoảng thời gian</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Từ ngày</label>
+                        <input type="date" id="startDateQty" />
+                    </div>
+                    <div class="filter-group" id="endDateGroupQty" style="display:none;">
+                        <label>Đến ngày</label>
+                        <input type="date" id="endDateQty" />
+                    </div>
+                    <div class="filter-group">
+                        <label>Cửa hàng</label>
+                        <select id="storeFilterQty">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="align-self:flex-end;">
+                        <button class="btn" onclick="loadQuantityData()">Tải dữ liệu</button>
+                    </div>
+                </div>
+
+                <div id="errorMessageQty" class="error" style="display:none;"></div>
+                <div id="loadingMessageQty" class="loading" style="display:none;">Đang tải dữ liệu...</div>
+
+                <div id="dashboardQty" style="display:none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Tổng số lượng</h3>
+                            <div class="value" id="totalQuantity">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Số đơn hàng</h3>
+                            <div class="value" id="totalOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Danh mục</h3>
+                            <div class="value" id="totalCategories">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Sản phẩm</h3>
+                            <div class="value" id="totalProducts">0</div>
+                        </div>
+                    </div>
+
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <h3>Số lượng theo danh mục</h3>
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Số lượng theo cửa hàng</h3>
+                            <canvas id="storeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3>Xu hướng theo ngày</h3>
+                        <canvas id="dateChart"></canvas>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Cửa hàng</th>
+                                    <th>Danh mục</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Nhân viên</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /****************** CONFIG ******************/
+        const SUPABASE_URL = 'https://tyuufjwutazjfuiawiul.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5dXVmand1dGF6amZ1aWF3aXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MDk4OTIsImV4cCI6MjA3NjA4NTg5Mn0.8WEsb2tBD6akNA9h9tR9zIAqjkZz0xZYVNbYCx2dEbc';
+        /*******************************************/
+
+        const validUsers = {
+            'Bo@Phuc': 'Nhim=Khanh',
+            'Nhim@Khanh': 'Bo=Phuc'
+        };
+
+        // Navigation Functions
+        function showMainMenu() {
+            document.getElementById('mainMenu').classList.remove('hidden');
+            document.getElementById('salesTab').classList.add('hidden');
+            document.getElementById('quantityTab').classList.add('hidden');
+        }
+
+        function showTab(tabId) {
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('salesTab').classList.add('hidden');
+            document.getElementById('quantityTab').classList.add('hidden');
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        // Auth Functions
+        function login(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('userPassword').value;
+
+            if (validUsers[userId] && validUsers[userId] === password) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('loginError').style.display = 'none';
+                initUIAfterLogin();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function logout() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('userId').value = '';
+            document.getElementById('userPassword').value = '';
+            showMainMenu();
+        }
+
+        // Utilities
+        function formatMoney(amount) {
+            if (isNaN(amount)) amount = 0;
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function showElement(id, show = true) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = show ? 'block' : 'none';
+        }
+
+        function setText(id, text) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+        }
+
+        function getNumberField(item, candidates = []) {
+            for (const name of candidates) {
+                if (item.hasOwnProperty(name) && item[name] !== null && item[name] !== undefined && item[name] !== '') {
+                    const n = parseFloat(item[name]);
+                    if (!isNaN(n)) return n;
+                }
+            }
+            return 0;
+        }
+
+        // UI Initialization
+        function initUIAfterLogin() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDateSale').value = today;
+            document.getElementById('endDateSale').value = today;
+            document.getElementById('startDateQty').value = today;
+            document.getElementById('endDateQty').value = today;
+
+            document.getElementById('dateTypeSale').addEventListener('change', function () {
+                document.getElementById('endDateGroupSale').style.display = this.value === 'range' ? 'flex' : 'none';
+            });
+
+            document.getElementById('dateTypeQty').addEventListener('change', function () {
+                document.getElementById('endDateGroupQty').style.display = this.value === 'range' ? 'flex' : 'none';
+            });
+
+            // Initialize store checkboxes for sales
+            const storesDefault = ['DH', 'NH', 'HXH', 'PY'];
+            const checkboxGroup = document.getElementById('storeCheckboxGroup');
+            
+            storesDefault.forEach(s => {
+                const label = document.createElement('label');
+                label.className = 'checkbox-item';
+                label.innerHTML = `
+                    <input type="checkbox" value="${s}" onchange="handleStoreCheckbox()">
+                    <span>${s}</span>
+                `;
+                checkboxGroup.appendChild(label);
+            });
+
+            // Initialize store select for quantity
+            const sQty = document.getElementById('storeFilterQty');
+            sQty.innerHTML = '<option value="">Tất cả</option>';
+            storesDefault.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                sQty.appendChild(opt);
+            });
+
+            if (SUPABASE_URL && SUPABASE_KEY) {
+                fetchStoresForQty();
+            }
+        }
+
+        // Handle "All stores" checkbox
+        function handleAllStoresCheckbox(checkbox) {
+            const checkboxes = document.querySelectorAll('#storeCheckboxGroup input[type="checkbox"]:not([value="all"])');
+            if (checkbox.checked) {
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+        }
+
+        // Handle individual store checkboxes
+        function handleStoreCheckbox() {
+            const allCheckbox = document.querySelector('#storeCheckboxGroup input[value="all"]');
+            const storeCheckboxes = document.querySelectorAll('#storeCheckboxGroup input[type="checkbox"]:not([value="all"])');
+            const anyChecked = Array.from(storeCheckboxes).some(cb => cb.checked);
+            
+            if (anyChecked) {
+                allCheckbox.checked = false;
+            } else {
+                allCheckbox.checked = true;
+            }
+        }
+
+        // Get selected stores from checkboxes
+        function getSelectedStores() {
+            const allCheckbox = document.querySelector('#storeCheckboxGroup input[value="all"]');
+            if (allCheckbox.checked) {
+                return ['all'];
+            }
+            
+            const storeCheckboxes = document.querySelectorAll('#storeCheckboxGroup input[type="checkbox"]:not([value="all"]):checked');
+            return Array.from(storeCheckboxes).map(cb => cb.value);
+        }
+
+        // Sales Logic
+        let saleChart = null;
+        let revenueTrendChart = null;
+
+        async function fetchSaleData() {
+            const start = document.getElementById('startDateSale').value;
+            const type = document.getElementById('dateTypeSale').value;
+            const end = (type === 'range') ? document.getElementById('endDateSale').value : start;
+            const selected = getSelectedStores();
+
+            if (!start) {
+                setText('errorSale', 'Vui lòng chọn ngày');
+                showElement('errorSale', true);
+                return;
+            }
+            
+            if (selected.length === 0) {
+                setText('errorSale', 'Vui lòng chọn ít nhất một quán');
+                showElement('errorSale', true);
+                return;
+            }
+            
+            showElement('errorSale', false);
+            setText('loadingSale', 'Đang tải dữ liệu...');
+            showElement('loadingSale', true);
+            showElement('resultsSale', false);
+
+            try {
+                if (!SUPABASE_URL || !SUPABASE_KEY) {
+                    await new Promise(r => setTimeout(r, 600));
+                    const sampleTotals = { cash: 15000000, transfer: 8500000, grab: 3200000, shopee: 2100000, total: 28800000 };
+                    displaySaleTotals(sampleTotals, false);
+                    return;
+                }
+
+                let url = `${SUPABASE_URL}/rest/v1/sale_quan?date=gte.${start}&date=lte.${end}&select=*`;
+                if (!selected.includes('all') && selected.length > 0) {
+                    const orParts = selected.map(s => `store_id.eq.${encodeURIComponent(s)}`);
+                    url += `&or=(${orParts.join(',')})`;
+                }
+
+                const res = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    setText('errorSale', 'Không có dữ liệu trong khoảng thời gian này');
+                    showElement('errorSale', true);
+                    showElement('loadingSale', false);
+                    return;
+                }
+
+                const totals = data.reduce((acc, item) => {
+                    acc.cash += getNumberField(item, ['cash_revenue', 'cash', 'cash_amount']);
+                    acc.transfer += getNumberField(item, ['transfer_revenue', 'momo', 'transfer']);
+                    acc.grab += getNumberField(item, ['grab_revenue', 'grab']);
+                    acc.shopee += getNumberField(item, ['shopee_revenue', 'shopee']);
+                    acc.total += getNumberField(item, ['total_revenue', 'total', 'total_amount']);
+                    return acc;
+                }, { cash: 0, transfer: 0, grab: 0, shopee: 0, total: 0 });
+
+                displaySaleTotals(totals, true, data);
+
+            } catch (err) {
+                setText('errorSale', 'Lỗi khi lấy dữ liệu: ' + err.message);
+                showElement('errorSale', true);
+            } finally {
+                showElement('loadingSale', false);
+            }
+        }
+
+        function displaySaleTotals(totals, fromServer = false, rows = []) {
+            setText('cashRevenue', formatMoney(totals.cash));
+            setText('transferRevenue', formatMoney(totals.transfer));
+            setText('grabRevenue', formatMoney(totals.grab));
+            setText('shopeeRevenue', formatMoney(totals.shopee));
+            setText('totalRevenue', formatMoney(totals.total));
+
+            const selected = getSelectedStores();
+            const isSingleStore = (!selected.includes('all') && selected.length === 1);
+            const type = document.getElementById('dateTypeSale').value;
+            const isRangeMode = (type === 'range');
+
+            if (isSingleStore) {
+                document.getElementById('chartTitle').textContent = 'Cơ Cấu Doanh Thu Theo Phương Thức';
+                drawPaymentMethodChart(totals);
+                
+                // Show trend chart for single store in range mode
+                if (isRangeMode && fromServer && rows && rows.length) {
+                    showElement('trendChartCard', true);
+                    drawRevenueTrendChartSingleStore(rows);
+                } else {
+                    showElement('trendChartCard', false);
+                }
+            } else {
+                document.getElementById('chartTitle').textContent = 'Cơ Cấu Doanh Thu Theo Quán';
+                if (fromServer && rows && rows.length) {
+                    const byStore = {};
+                    rows.forEach(r => {
+                        const name = r.username || r.store_id || r.store || 'Unknown';
+                        byStore[name] = (byStore[name] || 0) + getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+                    });
+                    drawStoreChart(byStore);
+                    
+                    // Show trend chart for multiple stores in range mode
+                    if (isRangeMode) {
+                        showElement('trendChartCard', true);
+                        drawRevenueTrendChartMultiStore(rows);
+                    } else {
+                        showElement('trendChartCard', false);
+                    }
+                } else {
+                    drawStoreChart({ 'DH': totals.total * 0.4, 'NH': totals.total * 0.3, 'HXH': totals.total * 0.2, 'PY': totals.total * 0.1 });
+                    showElement('trendChartCard', false);
+                }
+            }
+
+            showElement('resultsSale', true);
+        }
+
+        function drawPaymentMethodChart(totals) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (saleChart) saleChart.destroy();
+
+            saleChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Tiền Mặt', 'Chuyển Khoản', 'Grab', 'Shopee'],
+                    datasets: [{
+                        data: [totals.cash, totals.transfer, totals.grab, totals.shopee],
+                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        function drawRevenueTrendChartSingleStore(rows) {
+            const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+            if (revenueTrendChart) revenueTrendChart.destroy();
+
+            // Group by date
+            const byDate = {};
+            rows.forEach(r => {
+                const date = r.date;
+                if (!byDate[date]) {
+                    byDate[date] = 0;
+                }
+                byDate[date] += getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+            });
+
+            const sortedDates = Object.keys(byDate).sort();
+            const values = sortedDates.map(d => byDate[d]);
+
+            revenueTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: values,
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderColor: '#3498db',
+                        pointBackgroundColor: '#3498db',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + formatMoney(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(0) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawRevenueTrendChartMultiStore(rows) {
+            const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+            if (revenueTrendChart) revenueTrendChart.destroy();
+
+            // Group by date and store
+            const byDateStore = {};
+            const stores = new Set();
+
+            rows.forEach(r => {
+                const date = r.date;
+                const storeName = r.username || r.store_id || r.store || 'Unknown';
+                stores.add(storeName);
+
+                if (!byDateStore[date]) {
+                    byDateStore[date] = {};
+                }
+                if (!byDateStore[date][storeName]) {
+                    byDateStore[date][storeName] = 0;
+                }
+                byDateStore[date][storeName] += getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+            });
+
+            const sortedDates = Object.keys(byDateStore).sort();
+            const storesList = Array.from(stores);
+            const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
+
+            const datasets = storesList.map((store, index) => {
+                return {
+                    label: store,
+                    data: sortedDates.map(date => byDateStore[date][store] || 0),
+                    tension: 0.3,
+                    fill: false,
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length],
+                    pointBackgroundColor: colors[index % colors.length],
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                };
+            });
+
+            revenueTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatMoney(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(0) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawStoreChart(storeRevenue) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (saleChart) saleChart.destroy();
+
+            const labels = Object.keys(storeRevenue);
+            const data = Object.values(storeRevenue);
+
+            saleChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        // Quantity Logic
+        let categoryChart = null, storeChart = null, dateChart = null;
+
+        async function loadQuantityData() {
+            const start = document.getElementById('startDateQty').value;
+            const type = document.getElementById('dateTypeQty').value;
+            const end = (type === 'range') ? document.getElementById('endDateQty').value : start;
+            const store = document.getElementById('storeFilterQty').value;
+
+            if (!start) {
+                setText('errorMessageQty', 'Vui lòng chọn ngày');
+                showElement('errorMessageQty', true);
+                return;
+            }
+            showElement('errorMessageQty', false);
+            setText('loadingMessageQty', 'Đang tải dữ liệu...');
+            showElement('loadingMessageQty', true);
+            showElement('dashboardQty', false);
+
+            try {
+                if (!SUPABASE_URL || !SUPABASE_KEY) {
+                    await new Promise(r => setTimeout(r, 600));
+                    const sample = [
+                        { date: start, store: 'DH', category: 'Pizza Truyền thống', product_name: 'Gà teriyaki', quantity: 2, employee: 'Yen' },
+                        { date: start, store: 'NH', category: 'Pizza Gà', product_name: 'Gà nướng', quantity: 3, employee: 'Le' },
+                        { date: end, store: 'HXH', category: 'Pizza Truyền thống', product_name: 'Pepperoni', quantity: 4, employee: 'Xuan' }
+                    ];
+                    processQuantityData(sample);
+                    return;
+                }
+
+                let url = `${SUPABASE_URL}/rest/v1/pizza_sales?date=gte.${start}&date=lte.${end}&select=*`;
+                if (store) url += `&store=eq.${encodeURIComponent(store)}`;
+
+                const res = await fetch(url, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                if (!res.ok) throw new Error('Không thể tải dữ liệu');
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    setText('errorMessageQty', 'Không có dữ liệu');
+                    showElement('errorMessageQty', true);
+                    showElement('loadingMessageQty', false);
+                    return;
+                }
+
+                processQuantityData(data);
+
+            } catch (err) {
+                setText('errorMessageQty', 'Lỗi: ' + err.message);
+                showElement('errorMessageQty', true);
+            } finally {
+                showElement('loadingMessageQty', false);
+            }
+        }
+
+        function processQuantityData(data) {
+            const totalQuantity = data.reduce((s, it) => s + (parseInt(it.quantity) || 0), 0);
+            const totalOrders = data.length;
+            const categories = new Set(data.map(it => it.category || 'Khác'));
+            const products = new Set(data.map(it => it.product_name || it.product || 'Unknown'));
+
+            setText('totalQuantity', totalQuantity.toLocaleString());
+            setText('totalOrders', totalOrders.toLocaleString());
+            setText('totalCategories', categories.size);
+            setText('totalProducts', products.size);
+
+            const categoryData = {};
+            const storeData = {};
+            const dateData = {};
+
+            data.forEach(it => {
+                const qty = parseInt(it.quantity) || 0;
+                categoryData[it.category] = (categoryData[it.category] || 0) + qty;
+                storeData[it.store] = (storeData[it.store] || 0) + qty;
+                dateData[it.date] = (dateData[it.date] || 0) + qty;
+            });
+
+            createQuantityCharts(categoryData, storeData, dateData);
+            createQuantityTable(data);
+
+            showElement('dashboardQty', true);
+        }
+
+        function createQuantityCharts(categoryData, storeData, dateData) {
+            if (categoryChart) categoryChart.destroy();
+            if (storeChart) storeChart.destroy();
+            if (dateChart) dateChart.destroy();
+
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categoryData),
+                    datasets: [{
+                        data: Object.values(categoryData),
+                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            const stCtx = document.getElementById('storeChart').getContext('2d');
+            storeChart = new Chart(stCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(storeData),
+                    datasets: [{
+                        label: 'Số lượng',
+                        data: Object.values(storeData),
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            const sortedDates = Object.keys(dateData).sort();
+            const dtCtx = document.getElementById('dateChart').getContext('2d');
+            dateChart = new Chart(dtCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Số lượng bán',
+                        data: sortedDates.map(d => dateData[d]),
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function createQuantityTable(data) {
+            const tbody = document.getElementById('dataTable');
+            tbody.innerHTML = '';
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            data.forEach(it => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${it.date}</td>
+                    <td>${it.store || ''}</td>
+                    <td>${it.category || ''}</td>
+                    <td>${it.product_name || it.product || ''}</td>
+                    <td><strong>${it.quantity || 0}</strong></td>
+                    <td>${it.employee || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function fetchStoresForQty() {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/sale_quan?select=store_id,username`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const stores = [...new Map((data || []).map(i => [i.store_id, i])).values()];
+                const select = document.getElementById('storeFilterQty');
+                select.innerHTML = '<option value="">Tất cả</option>';
+                stores.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.store_id;
+                    option.textContent = s.username ? `${s.username} (${s.store_id})` : s.store_id;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.warn('Không tải được danh sách quán:', err.message);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('startDateSale').value) document.getElementById('startDateSale').value = today;
+            if (!document.getElementById('endDateSale').value) document.getElementById('endDateSale').value = today;
+            if (!document.getElementById('startDateQty').value) document.getElementById('startDateQty').value = today;
+            if (!document.getElementById('endDateQty').value) document.getElementById('endDateQty').value = today;
+        });
+    </script>
+</body>
+</html>
