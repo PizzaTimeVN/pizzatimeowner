@@ -1012,80 +1012,141 @@
             const ctx = document.getElementById('revenueTrendChart').getContext('2d');
             if (revenueTrendChart) revenueTrendChart.destroy();
 
-            // Group by date and store
-            const byDateStore = {};
-            const stores = new Set();
+            const selected = getSelectedStores();
+            const isAllStores = selected.includes('all');
 
-            rows.forEach(r => {
-                const date = r.date;
-                const storeName = r.username || r.store_id || r.store || 'Unknown';
-                stores.add(storeName);
+            if (isAllStores) {
+                // Chọn "Tất cả" → Hiển thị 1 line chart tổng
+                const byDate = {};
+                rows.forEach(r => {
+                    const date = r.date;
+                    if (!byDate[date]) {
+                        byDate[date] = 0;
+                    }
+                    byDate[date] += getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+                });
 
-                if (!byDateStore[date]) {
-                    byDateStore[date] = {};
-                }
-                if (!byDateStore[date][storeName]) {
-                    byDateStore[date][storeName] = 0;
-                }
-                byDateStore[date][storeName] += getNumberField(r, ['total_revenue', 'total', 'total_amount']);
-            });
+                const sortedDates = Object.keys(byDate).sort();
+                const values = sortedDates.map(d => byDate[d]);
 
-            const sortedDates = Object.keys(byDateStore).sort();
-            const storesList = Array.from(stores);
-            const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
-
-            const datasets = storesList.map((store, index) => {
-                return {
-                    label: store,
-                    data: sortedDates.map(date => byDateStore[date][store] || 0),
-                    tension: 0.3,
-                    fill: false,
-                    borderColor: colors[index % colors.length],
-                    backgroundColor: colors[index % colors.length],
-                    pointBackgroundColor: colors[index % colors.length],
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4
-                };
-            });
-
-            revenueTrendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: sortedDates,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 15
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + formatMoney(context.parsed.y);
+                revenueTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: [{
+                            label: 'Tổng doanh thu',
+                            data: values,
+                            tension: 0.3,
+                            fill: true,
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderColor: '#3498db',
+                            pointBackgroundColor: '#3498db',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Tổng doanh thu: ' + formatMoney(context.parsed.y);
+                                    }
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return (value / 1000000).toFixed(0) + 'M';
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return (value / 1000000).toFixed(0) + 'M';
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                // Chọn cụ thể → Hiển thị line chart của TỪNG quán được chọn
+                const byDateStore = {};
+                
+                rows.forEach(r => {
+                    const date = r.date;
+                    const storeId = r.store_id || r.store || 'Unknown';
+                    
+                    // Chỉ xử lý các quán được chọn
+                    if (!selected.includes(storeId)) return;
+
+                    if (!byDateStore[date]) {
+                        byDateStore[date] = {};
+                    }
+                    if (!byDateStore[date][storeId]) {
+                        byDateStore[date][storeId] = 0;
+                    }
+                    byDateStore[date][storeId] += getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+                });
+
+                const sortedDates = Object.keys(byDateStore).sort();
+                const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
+
+                const datasets = selected.map((storeId, index) => {
+                    return {
+                        label: storeId,
+                        data: sortedDates.map(date => byDateStore[date] && byDateStore[date][storeId] ? byDateStore[date][storeId] : 0),
+                        tension: 0.3,
+                        fill: false,
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length],
+                        pointBackgroundColor: colors[index % colors.length],
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    };
+                });
+
+                revenueTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + formatMoney(context.parsed.y);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return (value / 1000000).toFixed(0) + 'M';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function drawStoreChart(storeRevenue) {
