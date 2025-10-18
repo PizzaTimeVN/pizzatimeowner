@@ -903,8 +903,12 @@
                 if (fromServer && rows && rows.length) {
                     const byStore = {};
                     rows.forEach(r => {
-                        const name = r.username || r.store_id || r.store || 'Unknown';
-                        byStore[name] = (byStore[name] || 0) + getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+                        const storeId = r.store_id || r.store || 'Unknown';
+                        // Chỉ tính các quán có trong danh sách (bỏ qua admin, unknown...)
+                        const validStores = ['DH', 'NH', 'HXH', 'PY'];
+                        if (validStores.includes(storeId)) {
+                            byStore[storeId] = (byStore[storeId] || 0) + getNumberField(r, ['total_revenue', 'total', 'total_amount']);
+                        }
                     });
                     drawStoreChart(byStore);
                     
@@ -1153,8 +1157,26 @@
             const ctx = document.getElementById('revenueChart').getContext('2d');
             if (saleChart) saleChart.destroy();
 
-            const labels = Object.keys(storeRevenue);
-            const data = Object.values(storeRevenue);
+            const selected = getSelectedStores();
+            const isAllStores = selected.includes('all');
+
+            let labels, data;
+
+            if (isAllStores) {
+                // Chọn "Tất cả" → Hiển thị tất cả các quán có dữ liệu
+                labels = Object.keys(storeRevenue);
+                data = Object.values(storeRevenue);
+            } else {
+                // Chọn cụ thể → Chỉ hiển thị các quán được chọn
+                labels = [];
+                data = [];
+                selected.forEach(storeId => {
+                    if (storeRevenue[storeId]) {
+                        labels.push(storeId);
+                        data.push(storeRevenue[storeId]);
+                    }
+                });
+            }
 
             saleChart = new Chart(ctx, {
                 type: 'pie',
@@ -1169,7 +1191,18 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'right' }
+                        legend: { position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = formatMoney(context.parsed);
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
                     }
                 }
             });
