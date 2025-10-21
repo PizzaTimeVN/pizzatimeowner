@@ -396,6 +396,31 @@
             box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
         }
 
+        /* Nổi bật Tổng Xuất Hàng */
+        .stat-export-total {
+            border-left-color: #e67e22;
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            box-shadow: 0 4px 16px rgba(230, 126, 34, 0.3);
+            transform: scale(1.02);
+        }
+
+        .stat-export-total h3 {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-export-total .value {
+            color: #ffffff;
+            font-size: 32px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-export-total:hover {
+            transform: scale(1.04);
+            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
+        }
+
         /* Charts */
         .chart-wrapper,
         .chart-card {
@@ -529,6 +554,11 @@
                     <div class="menu-card-icon">📊</div>
                     <h3>Số lượng bán</h3>
                     <p>Phân tích số lượng bán theo loại sản phẩm</p>
+                </div>
+                <div class="menu-card" onclick="showTab('exportTab')">
+                    <div class="menu-card-icon">📦</div>
+                    <h3>Xuất hàng</h3>
+                    <p>Quản lý và theo dõi xuất hàng cho các cửa hàng</p>
                 </div>
             </div>
         </div>
@@ -717,6 +747,103 @@
                 </div>
             </div>
         </div>
+
+        <!-- Export Tab -->
+        <div id="exportTab" class="hidden">
+            <div class="tab-content">
+                <button class="back-btn" onclick="showMainMenu()">← Quay lại</button>
+                
+                <div class="tab-header">
+                    <h2>Xuất hàng</h2>
+                    <p>Quản lý và theo dõi xuất hàng cho các cửa hàng</p>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Loại thời gian</label>
+                        <select id="dateTypeExport">
+                            <option value="single">Ngày cố định</option>
+                            <option value="range">Khoảng thời gian</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Từ ngày</label>
+                        <input type="date" id="startDateExport" />
+                    </div>
+                    <div class="filter-group" id="endDateGroupExport" style="display:none;">
+                        <label>Đến ngày</label>
+                        <input type="date" id="endDateExport" />
+                    </div>
+                    <div class="filter-group">
+                        <label>Chọn quán</label>
+                        <div class="checkbox-group" id="storeCheckboxGroupExport">
+                            <label class="checkbox-item">
+                                <input type="checkbox" value="all" checked onchange="handleAllStoresCheckboxExport(this)">
+                                <span>Tất cả các quán</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="filter-group" style="align-self:flex-end;">
+                        <button class="btn" onclick="loadExportData()">Xem báo cáo</button>
+                    </div>
+                </div>
+
+                <div id="errorExport" class="error" style="display:none;"></div>
+                <div id="loadingExport" class="loading" style="display:none;">Đang tải dữ liệu...</div>
+
+                <div id="resultsExport" style="display:none;">
+                    <div class="stats-grid">
+                        <div class="stat-card stat-export-total">
+                            <h3>📦 Tổng số lượng xuất</h3>
+                            <div class="value" id="totalExportQuantity">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>📋 Số lần xuất</h3>
+                            <div class="value" id="totalExportOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>🏪 Cửa hàng</h3>
+                            <div class="value" id="totalExportStores">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>📝 Sản phẩm</h3>
+                            <div class="value" id="totalExportProducts">0</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card" style="margin-bottom: 24px;">
+                        <h3>🏆 Top 10 Sản Phẩm Xuất Nhiều Nhất</h3>
+                        <canvas id="topExportProductsChart"></canvas>
+                    </div>
+
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <h3 id="exportChartTitle">Số lượng xuất theo cửa hàng</h3>
+                            <canvas id="exportStoreChart"></canvas>
+                        </div>
+                        <div class="chart-card" id="exportTrendChartCard" style="display:none;">
+                            <h3>Xu hướng xuất hàng theo ngày</h3>
+                            <canvas id="exportTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Cửa hàng</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody id="exportDataTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -735,12 +862,14 @@
             document.getElementById('mainMenu').classList.remove('hidden');
             document.getElementById('salesTab').classList.add('hidden');
             document.getElementById('quantityTab').classList.add('hidden');
+            document.getElementById('exportTab').classList.add('hidden');
         }
 
         function showTab(tabId) {
             document.getElementById('mainMenu').classList.add('hidden');
             document.getElementById('salesTab').classList.add('hidden');
             document.getElementById('quantityTab').classList.add('hidden');
+            document.getElementById('exportTab').classList.add('hidden');
             document.getElementById(tabId).classList.remove('hidden');
         }
 
@@ -812,8 +941,14 @@
                 document.getElementById('endDateGroupQty').style.display = this.value === 'range' ? 'flex' : 'none';
             });
 
+            document.getElementById('dateTypeExport').addEventListener('change', function () {
+                document.getElementById('endDateGroupExport').style.display = this.value === 'range' ? 'flex' : 'none';
+            });
+
             // Initialize store checkboxes for sales
             const storesDefault = ['DH', 'NH', 'HXH', 'PY'];
+            document.getElementById('startDateExport').value = today;
+            document.getElementById('endDateExport').value = today;
             const checkboxGroup = document.getElementById('storeCheckboxGroup');
             
             storesDefault.forEach(s => {
@@ -824,6 +959,18 @@
                     <span>${s}</span>
                 `;
                 checkboxGroup.appendChild(label);
+            });
+
+            // Initialize store checkboxes for export
+            const checkboxGroupExport = document.getElementById('storeCheckboxGroupExport');
+            storesDefault.forEach(s => {
+                const label = document.createElement('label');
+                label.className = 'checkbox-item';
+                label.innerHTML = `
+                    <input type="checkbox" value="${s}" onchange="handleStoreCheckboxExport()">
+                    <span>${s}</span>
+                `;
+                checkboxGroupExport.appendChild(label);
             });
 
             // Initialize store select for quantity
@@ -873,6 +1020,36 @@
             return Array.from(storeCheckboxes).map(cb => cb.value);
         }
 
+        // Export tab checkbox handlers
+        function handleAllStoresCheckboxExport(checkbox) {
+            const checkboxes = document.querySelectorAll('#storeCheckboxGroupExport input[type="checkbox"]:not([value="all"])');
+            if (checkbox.checked) {
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+        }
+
+        function handleStoreCheckboxExport() {
+            const allCheckbox = document.querySelector('#storeCheckboxGroupExport input[value="all"]');
+            const storeCheckboxes = document.querySelectorAll('#storeCheckboxGroupExport input[type="checkbox"]:not([value="all"])');
+            const anyChecked = Array.from(storeCheckboxes).some(cb => cb.checked);
+            
+            if (anyChecked) {
+                allCheckbox.checked = false;
+            } else {
+                allCheckbox.checked = true;
+            }
+        }
+
+        function getSelectedStoresExport() {
+            const allCheckbox = document.querySelector('#storeCheckboxGroupExport input[value="all"]');
+            if (allCheckbox.checked) {
+                return ['all'];
+            }
+            
+            const storeCheckboxes = document.querySelectorAll('#storeCheckboxGroupExport input[type="checkbox"]:not([value="all"]):checked');
+            return Array.from(storeCheckboxes).map(cb => cb.value);
+        }
+
         // Sales Logic
         let saleChart = null;
         let revenueTrendChart = null;
@@ -908,41 +1085,20 @@
                     return;
                 }
 
-                let url = `${SUPABASE_URL}/rest/v1/sale_quan?date=gte.${start}&date=lte.${end}&select=*&order=created_at.desc`;
-
+                let url = `${SUPABASE_URL}/rest/v1/sale_quan?date=gte.${start}&date=lte.${end}&select=*`;
                 if (!selected.includes('all') && selected.length > 0) {
                     const orParts = selected.map(s => `store_id.eq.${encodeURIComponent(s)}`);
                     url += `&or=(${orParts.join(',')})`;
                 }
 
                 const res = await fetch(url, {
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        }
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const allData = await res.json();
-
-                    if (!allData || allData.length === 0) {
-                        setText('errorSale', 'Không có dữ liệu trong khoảng thời gian này');
-                        showElement('errorSale', true);
-                        showElement('loadingSale', false);
-                        return;
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
                     }
-
-                    // Lọc lấy record mới nhất theo created_at cho mỗi ngày + store
-                    const dataMap = {};
-                    allData.forEach(item => {
-                        const key = `${item.date}_${item.store_id}`;
-                        if (!dataMap[key]) {
-                            dataMap[key] = item;
-                        }
-                        // Vì đã sort theo created_at desc, record đầu tiên là mới nhất
-                    });
-                    const data = Object.values(dataMap);
-
-
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
 
                 if (!data || data.length === 0) {
                     setText('errorSale', 'Không có dữ liệu trong khoảng thời gian này');
@@ -1539,23 +1695,69 @@
             });
         }
 
-        function createQuantityTable(data) {
-            const tbody = document.getElementById('dataTable');
-            tbody.innerHTML = '';
-            data.sort((a, b) => new Date(b.date) - new Date(a.date));
-            data.forEach(it => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${it.date}</td>
-                    <td>${it.store || ''}</td>
-                    <td>${it.category || ''}</td>
-                    <td>${it.product_name || it.product || ''}</td>
-                    <td><strong>${it.quantity || 0}</strong></td>
-                    <td>${it.employee || ''}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+       function createQuantityTable(data) {
+    const tbody = document.getElementById('dataTable');
+    tbody.innerHTML = '';
+    
+    const type = document.getElementById('dateTypeQty').value;
+    const isRangeMode = (type === 'range');
+
+    if (isRangeMode) {
+        // Khi chọn dải ngày: Gộp theo store + product_name
+        const aggregated = {};
+        
+        data.forEach(it => {
+            const productName = it.product_name || it.product || 'Unknown';
+            const key = `${it.store}|${it.category}|${productName}`;
+            const qty = parseInt(it.quantity) || 0;
+            
+            if (!aggregated[key]) {
+                aggregated[key] = {
+                    store: it.store,
+                    category: it.category,
+                    product_name: productName,
+                    quantity: 0
+                };
+            }
+            aggregated[key].quantity += qty;
+        });
+
+        // Chuyển thành mảng và sắp xếp theo cửa hàng, sau đó theo số lượng giảm dần
+        const aggregatedArray = Object.values(aggregated);
+        aggregatedArray.sort((a, b) => {
+            if (a.store !== b.store) {
+                return a.store.localeCompare(b.store);
+            }
+            return b.quantity - a.quantity;
+        });
+
+        aggregatedArray.forEach(it => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${it.store || ''}</td>
+                <td>${it.category || ''}</td>
+                <td>${it.product_name || ''}</td>
+                <td><strong>${it.quantity.toLocaleString()}</strong></td>
+            `;
+            tbody.appendChild(row);
+        });
+    } else {
+        // Khi chọn ngày cố định: Hiển thị từng dòng với đầy đủ thông tin
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        data.forEach(it => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${it.date}</td>
+                <td>${it.store || ''}</td>
+                <td>${it.category || ''}</td>
+                <td>${it.product_name || it.product || ''}</td>
+                <td><strong>${it.quantity || 0}</strong></td>
+                <td>${it.employee || ''}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+}
 
         async function fetchStoresForQty() {
             try {
@@ -1585,6 +1787,601 @@
             if (!document.getElementById('endDateSale').value) document.getElementById('endDateSale').value = today;
             if (!document.getElementById('startDateQty').value) document.getElementById('startDateQty').value = today;
             if (!document.getElementById('endDateQty').value) document.getElementById('endDateQty').value = today;
+        });
+
+       // Export Logic
+        let exportStoreChart = null, exportTrendChart = null, topExportProductsChart = null;
+
+        async function loadExportData() {
+            const start = document.getElementById('startDateExport').value;
+            const type = document.getElementById('dateTypeExport').value;
+            const end = (type === 'range') ? document.getElementById('endDateExport').value : start;
+            const selected = getSelectedStoresExport();
+
+            if (!start) {
+                setText('errorExport', 'Vui lòng chọn ngày');
+                showElement('errorExport', true);
+                return;
+            }
+            
+            if (selected.length === 0) {
+                setText('errorExport', 'Vui lòng chọn ít nhất một quán');
+                showElement('errorExport', true);
+                return;
+            }
+            
+            showElement('errorExport', false);
+            setText('loadingExport', 'Đang tải dữ liệu...');
+            showElement('loadingExport', true);
+            showElement('resultsExport', false);
+
+            try {
+                if (!SUPABASE_URL || !SUPABASE_KEY) {
+                    await new Promise(r => setTimeout(r, 600));
+                    const sampleData = [
+                        { date: start, store: 'DH', item: 'Mực (bịch)', quantity: -500, created_at: '2025-10-21T11:35:21.719641+00' },
+                        { date: start, store: 'NH', item: 'Gà Lắc (bịch)', quantity: -300, created_at: '2025-10-21T11:35:21.342029+00' }
+                    ];
+                    processExportData(sampleData);
+                    return;
+                }
+
+                let url = `${SUPABASE_URL}/rest/v1/exports?date=gte.${start}&date=lte.${end}&select=*&order=created_at.desc`;
+                if (!selected.includes('all') && selected.length > 0) {
+                    const orParts = selected.map(s => `store.eq.${encodeURIComponent(s)}`);
+                    url += `&or=(${orParts.join(',')})`;
+                }
+
+                const res = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    setText('errorExport', 'Không có dữ liệu trong khoảng thời gian này');
+                    showElement('errorExport', true);
+                    showElement('loadingExport', false);
+                    return;
+                }
+
+                processExportData(data);
+
+            } catch (err) {
+                setText('errorExport', 'Lỗi khi lấy dữ liệu: ' + err.message);
+                showElement('errorExport', true);
+            } finally {
+                showElement('loadingExport', false);
+            }
+        }
+
+        function processExportData(rawData) {
+            // Group by date + store + item, keep only latest created_at
+            const grouped = {};
+            rawData.forEach(item => {
+                const key = `${item.date}|${item.store}|${item.item}`;
+                if (!grouped[key] || new Date(item.created_at) > new Date(grouped[key].created_at)) {
+                    grouped[key] = item;
+                }
+            });
+
+            const data = Object.values(grouped);
+
+            // Calculate totals
+            const totalQuantity = data.reduce((sum, item) => sum + Math.abs(parseFloat(item.quantity) || 0), 0);
+            const totalOrders = data.length;
+            const stores = new Set(data.map(item => item.store));
+            const products = new Set(data.map(item => item.item));
+
+            setText('totalExportQuantity', totalQuantity.toLocaleString());
+            setText('totalExportOrders', totalOrders.toLocaleString());
+            setText('totalExportStores', stores.size);
+            setText('totalExportProducts', products.size);
+
+            // Aggregate data for charts
+            const byStore = {};
+            const byDate = {};
+            const byProduct = {};
+
+            data.forEach(item => {
+                const qty = Math.abs(parseFloat(item.quantity) || 0);
+                
+                byStore[item.store] = (byStore[item.store] || 0) + qty;
+                byDate[item.date] = (byDate[item.date] || 0) + qty;
+                byProduct[item.item] = (byProduct[item.item] || 0) + qty;
+            });
+
+            // Display charts
+            const selected = getSelectedStoresExport();
+            const isSingleStore = (!selected.includes('all') && selected.length === 1);
+            const type = document.getElementById('dateTypeExport').value;
+            const isRangeMode = (type === 'range');
+
+            if (isSingleStore) {
+                document.getElementById('exportChartTitle').textContent = 'Top 10 sản phẩm xuất nhiều nhất';
+                drawTopExportProductsChartSingle(byProduct);
+                
+                if (isRangeMode) {
+                    showElement('exportTrendChartCard', true);
+                    drawExportTrendChartSingle(data);
+                } else {
+                    showElement('exportTrendChartCard', false);
+                }
+            } else {
+                document.getElementById('exportChartTitle').textContent = 'Số lượng xuất theo cửa hàng';
+                drawExportStoreChart(byStore, selected);
+                
+                if (isRangeMode) {
+                    showElement('exportTrendChartCard', true);
+                    drawExportTrendChartMulti(data, selected);
+                } else {
+                    showElement('exportTrendChartCard', false);
+                }
+            }
+
+            // Draw top products chart (always show)
+            drawTopExportProductsChart(byProduct);
+
+            // Create table
+            createExportTable(data);
+
+            showElement('resultsExport', true);
+        }
+
+        function drawTopExportProductsChart(productData) {
+            if (topExportProductsChart) topExportProductsChart.destroy();
+
+            // Sort and get top 10
+            const sortedProducts = Object.entries(productData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            const labels = sortedProducts.map(item => item[0]);
+            const data = sortedProducts.map(item => item[1]);
+
+            const colors = data.map((value, index) => {
+                const hue = 200 - (index * 15);
+                return `hsl(${hue}, 65%, 55%)`;
+            });
+
+            const ctx = document.getElementById('topExportProductsChart').getContext('2d');
+            topExportProductsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng xuất',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('55%', '45%')),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Số lượng: ' + context.parsed.x.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawTopExportProductsChartSingle(productData) {
+            const ctx = document.getElementById('exportStoreChart').getContext('2d');
+            if (exportStoreChart) exportStoreChart.destroy();
+
+            const sortedProducts = Object.entries(productData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            const labels = sortedProducts.map(item => item[0]);
+            const data = sortedProducts.map(item => item[1]);
+
+            const colors = data.map((value, index) => {
+                const hue = 200 - (index * 15);
+                return `hsl(${hue}, 65%, 55%)`;
+            });
+
+            exportStoreChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng xuất',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('55%', '45%')),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Số lượng: ' + context.parsed.x.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawExportStoreChart(storeData, selected) {
+            const ctx = document.getElementById('exportStoreChart').getContext('2d');
+            if (exportStoreChart) exportStoreChart.destroy();
+
+            const isAllStores = selected.includes('all');
+            let labels, data;
+
+            if (isAllStores) {
+                labels = Object.keys(storeData);
+                data = Object.values(storeData);
+            } else {
+                labels = [];
+                data = [];
+                selected.forEach(storeId => {
+                    if (storeData[storeId]) {
+                        labels.push(storeId);
+                        data.push(storeData[storeId]);
+                    }
+                });
+            }
+
+            exportStoreChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed.toLocaleString();
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawExportTrendChartSingle(data) {
+            const ctx = document.getElementById('exportTrendChart').getContext('2d');
+            if (exportTrendChart) exportTrendChart.destroy();
+
+            const byDate = {};
+            data.forEach(item => {
+                const date = item.date;
+                const qty = Math.abs(parseFloat(item.quantity) || 0);
+                byDate[date] = (byDate[date] || 0) + qty;
+            });
+
+            const sortedDates = Object.keys(byDate).sort();
+            const values = sortedDates.map(d => byDate[d]);
+
+            exportTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Số lượng xuất',
+                        data: values,
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                        borderColor: '#e67e22',
+                        pointBackgroundColor: '#e67e22',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Số lượng: ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawExportTrendChartMulti(data, selected) {
+            const ctx = document.getElementById('exportTrendChart').getContext('2d');
+            if (exportTrendChart) exportTrendChart.destroy();
+
+            const isAllStores = selected.includes('all');
+
+            if (isAllStores) {
+                const byDate = {};
+                data.forEach(item => {
+                    const date = item.date;
+                    const qty = Math.abs(parseFloat(item.quantity) || 0);
+                    byDate[date] = (byDate[date] || 0) + qty;
+                });
+
+                const sortedDates = Object.keys(byDate).sort();
+                const values = sortedDates.map(d => byDate[d]);
+
+                exportTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: [{
+                            label: 'Tổng số lượng xuất',
+                            data: values,
+                            tension: 0.3,
+                            fill: true,
+                            backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                            borderColor: '#e67e22',
+                            pointBackgroundColor: '#e67e22',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Tổng số lượng: ' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                const byDateStore = {};
+                
+                data.forEach(item => {
+                    const date = item.date;
+                    const storeId = item.store;
+                    const qty = Math.abs(parseFloat(item.quantity) || 0);
+                    
+                    if (!selected.includes(storeId)) return;
+
+                    if (!byDateStore[date]) {
+                        byDateStore[date] = {};
+                    }
+                    if (!byDateStore[date][storeId]) {
+                        byDateStore[date][storeId] = 0;
+                    }
+                    byDateStore[date][storeId] += qty;
+                });
+
+                const sortedDates = Object.keys(byDateStore).sort();
+                const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
+
+                const datasets = selected.map((storeId, index) => {
+                    return {
+                        label: storeId,
+                        data: sortedDates.map(date => byDateStore[date] && byDateStore[date][storeId] ? byDateStore[date][storeId] : 0),
+                        tension: 0.3,
+                        fill: false,
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length],
+                        pointBackgroundColor: colors[index % colors.length],
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    };
+                });
+
+                exportTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function createExportTable(data) {
+            const tbody = document.getElementById('exportDataTable');
+            tbody.innerHTML = '';
+            
+            const type = document.getElementById('dateTypeExport').value;
+            const isRangeMode = (type === 'range');
+
+            if (isRangeMode) {
+                // Khi chọn dải ngày: Gộp theo store + item
+                const aggregated = {};
+                
+                data.forEach(item => {
+                    const key = `${item.store}|${item.item}`;
+                    const qty = Math.abs(parseFloat(item.quantity) || 0);
+                    
+                    if (!aggregated[key]) {
+                        aggregated[key] = {
+                            store: item.store,
+                            item: item.item,
+                            quantity: 0,
+                            user_name: item.user_name
+                        };
+                    }
+                    aggregated[key].quantity += qty;
+                });
+
+                // Chuyển thành mảng và sắp xếp theo số lượng giảm dần
+                const aggregatedArray = Object.values(aggregated);
+                aggregatedArray.sort((a, b) => b.quantity - a.quantity);
+
+                aggregatedArray.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="1"><em>Tổng</em></td>
+                        <td>${item.store || ''}</td>
+                        <td>${item.item || ''}</td>
+                        <td><strong>${item.quantity.toLocaleString()}</strong></td>
+                        <td>${item.user_name || ''}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                // Khi chọn ngày cố định: Hiển thị từng dòng như cũ
+                data.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    const qty = Math.abs(parseFloat(item.quantity) || 0);
+                    row.innerHTML = `
+                        <td>${item.date}</td>
+                        <td>${item.store || ''}</td>
+                        <td>${item.item || ''}</td>
+                        <td><strong>${qty.toLocaleString()}</strong></td>
+                        <td>${item.user_name || ''}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('startDateSale').value) document.getElementById('startDateSale').value = today;
+            if (!document.getElementById('endDateSale').value) document.getElementById('endDateSale').value = today;
+            if (!document.getElementById('startDateQty').value) document.getElementById('startDateQty').value = today;
+            if (!document.getElementById('endDateQty').value) document.getElementById('endDateQty').value = today;
+            if (!document.getElementById('startDateExport').value) document.getElementById('startDateExport').value = today;
+            if (!document.getElementById('endDateExport').value) document.getElementById('endDateExport').value = today;
         });
     </script>
 </body>
