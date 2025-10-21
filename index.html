@@ -726,8 +726,8 @@
         /*******************************************/
 
         const validUsers = {
-            'Bo@Phuc': 'Nhim=Khanh',
-            'Nhim@Khanh': 'Bo=Phuc'
+            'owner': 'pizza123',
+            'admin': 'admin123'
         };
 
         // Navigation Functions
@@ -908,20 +908,41 @@
                     return;
                 }
 
-                let url = `${SUPABASE_URL}/rest/v1/sale_quan?date=gte.${start}&date=lte.${end}&select=*`;
+                let url = `${SUPABASE_URL}/rest/v1/sale_quan?date=gte.${start}&date=lte.${end}&select=*&order=created_at.desc`;
+
                 if (!selected.includes('all') && selected.length > 0) {
                     const orParts = selected.map(s => `store_id.eq.${encodeURIComponent(s)}`);
                     url += `&or=(${orParts.join(',')})`;
                 }
 
                 const res = await fetch(url, {
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const allData = await res.json();
+
+                    if (!allData || allData.length === 0) {
+                        setText('errorSale', 'Không có dữ liệu trong khoảng thời gian này');
+                        showElement('errorSale', true);
+                        showElement('loadingSale', false);
+                        return;
                     }
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
+
+                    // Lọc lấy record mới nhất theo created_at cho mỗi ngày + store
+                    const dataMap = {};
+                    allData.forEach(item => {
+                        const key = `${item.date}_${item.store_id}`;
+                        if (!dataMap[key]) {
+                            dataMap[key] = item;
+                        }
+                        // Vì đã sort theo created_at desc, record đầu tiên là mới nhất
+                    });
+                    const data = Object.values(dataMap);
+
+
 
                 if (!data || data.length === 0) {
                     setText('errorSale', 'Không có dữ liệu trong khoảng thời gian này');
