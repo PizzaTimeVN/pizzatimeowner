@@ -1624,140 +1624,171 @@
         }
 
         function createQuantityCharts(categoryData, storeData, dateData) {
-            if (categoryChart) categoryChart.destroy();
-            if (storeChart) storeChart.destroy();
-            if (dateChart) dateChart.destroy();
+                if (categoryChart) categoryChart.destroy();
+                if (storeChart) storeChart.destroy();
+                if (dateChart) dateChart.destroy();
 
-            const catCtx = document.getElementById('categoryChart').getContext('2d');
-            categoryChart = new Chart(catCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(categoryData),
-                    datasets: [{
-                        data: Object.values(categoryData),
-                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-
-            const stCtx = document.getElementById('storeChart').getContext('2d');
-            storeChart = new Chart(stCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(storeData),
-                    datasets: [{
-                        label: 'Số lượng',
-                        data: Object.values(storeData),
-                        backgroundColor: '#3498db'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false }
+                const catCtx = document.getElementById('categoryChart').getContext('2d');
+                categoryChart = new Chart(catCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(categoryData),
+                        datasets: [{
+                            data: Object.values(categoryData),
+                            backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
+                        }]
                     },
-                    scales: {
-                        y: { beginAtZero: true }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
                     }
+                });
+
+                const stCtx = document.getElementById('storeChart').getContext('2d');
+                storeChart = new Chart(stCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(storeData),
+                        datasets: [{
+                            label: 'Số lượng',
+                            data: Object.values(storeData),
+                            backgroundColor: '#3498db'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+
+                const sortedDates = Object.keys(dateData).sort();
+                const dtCtx = document.getElementById('dateChart').getContext('2d');
+                dateChart = new Chart(dtCtx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: [{
+                            label: 'Số lượng bán',
+                            data: sortedDates.map(d => dateData[d]),
+                            tension: 0.3,
+                            fill: true,
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderColor: '#3498db'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            function createQuantityTable(data) {
+        const tbody = document.getElementById('dataTable');
+        tbody.innerHTML = '';
+        
+        const type = document.getElementById('dateTypeQty').value;
+        const isRangeMode = (type === 'range');
+        const storeFilter = document.getElementById('storeFilterQty').value;
+        const isAllStores = !storeFilter; // Kiểm tra xem có chọn "Tất cả" không
+
+        if (isRangeMode) {
+            // Khi chọn dải ngày: Gộp theo product_name (và store nếu không phải "Tất cả")
+            const aggregated = {};
+            
+            data.forEach(it => {
+                const productName = it.product_name || it.product || 'Unknown';
+                let key;
+                
+                if (isAllStores) {
+                    // Nếu chọn "Tất cả các quán" -> gộp theo product_name + category
+                    key = `${it.category}|${productName}`;
+                } else {
+                    // Nếu chọn quán cụ thể -> gộp theo store + category + product_name
+                    key = `${it.store}|${it.category}|${productName}`;
                 }
+                
+                const qty = parseInt(it.quantity) || 0;
+                
+                if (!aggregated[key]) {
+                    aggregated[key] = {
+                        store: isAllStores ? 'Tất cả các quán' : it.store,
+                        category: it.category,
+                        product_name: productName,
+                        quantity: 0
+                    };
+                }
+                aggregated[key].quantity += qty;
             });
 
-            const sortedDates = Object.keys(dateData).sort();
-            const dtCtx = document.getElementById('dateChart').getContext('2d');
-            dateChart = new Chart(dtCtx, {
-                type: 'line',
-                data: {
-                    labels: sortedDates,
-                    datasets: [{
-                        label: 'Số lượng bán',
-                        data: sortedDates.map(d => dateData[d]),
-                        tension: 0.3,
-                        fill: true,
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        borderColor: '#3498db'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        y: { beginAtZero: true }
+            // Chuyển thành mảng và sắp xếp
+            const aggregatedArray = Object.values(aggregated);
+            
+            if (isAllStores) {
+                // Sắp xếp theo số lượng giảm dần khi chọn "Tất cả"
+                aggregatedArray.sort((a, b) => b.quantity - a.quantity);
+            } else {
+                // Sắp xếp theo cửa hàng, sau đó theo số lượng giảm dần
+                aggregatedArray.sort((a, b) => {
+                    if (a.store !== b.store) {
+                        return a.store.localeCompare(b.store);
                     }
+                    return b.quantity - a.quantity;
+                });
+            }
+
+            // Hiển thị bảng với cột phù hợp
+            aggregatedArray.forEach(it => {
+                const row = document.createElement('tr');
+                
+                if (isAllStores) {
+                    // Không hiển thị cột "Cửa hàng" khi chọn "Tất cả"
+                    row.innerHTML = `
+                        <td>${it.category || ''}</td>
+                        <td>${it.product_name || ''}</td>
+                        <td><strong>${it.quantity.toLocaleString()}</strong></td>
+                    `;
+                } else {
+                    // Hiển thị đầy đủ khi chọn quán cụ thể
+                    row.innerHTML = `
+                        <td>${it.store || ''}</td>
+                        <td>${it.category || ''}</td>
+                        <td>${it.product_name || ''}</td>
+                        <td><strong>${it.quantity.toLocaleString()}</strong></td>
+                    `;
                 }
+                
+                tbody.appendChild(row);
+            });
+        } else {
+            // Khi chọn ngày cố định: Hiển thị từng dòng với đầy đủ thông tin
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            data.forEach(it => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${it.date}</td>
+                    <td>${it.store || ''}</td>
+                    <td>${it.category || ''}</td>
+                    <td>${it.product_name || it.product || ''}</td>
+                    <td><strong>${it.quantity || 0}</strong></td>
+                    <td>${it.employee || ''}</td>
+                `;
+                tbody.appendChild(row);
             });
         }
-
-       function createQuantityTable(data) {
-    const tbody = document.getElementById('dataTable');
-    tbody.innerHTML = '';
-    
-    const type = document.getElementById('dateTypeQty').value;
-    const isRangeMode = (type === 'range');
-
-    if (isRangeMode) {
-        // Khi chọn dải ngày: Gộp theo store + product_name
-        const aggregated = {};
-        
-        data.forEach(it => {
-            const productName = it.product_name || it.product || 'Unknown';
-            const key = `${it.store}|${it.category}|${productName}`;
-            const qty = parseInt(it.quantity) || 0;
-            
-            if (!aggregated[key]) {
-                aggregated[key] = {
-                    store: it.store,
-                    category: it.category,
-                    product_name: productName,
-                    quantity: 0
-                };
-            }
-            aggregated[key].quantity += qty;
-        });
-
-        // Chuyển thành mảng và sắp xếp theo cửa hàng, sau đó theo số lượng giảm dần
-        const aggregatedArray = Object.values(aggregated);
-        aggregatedArray.sort((a, b) => {
-            if (a.store !== b.store) {
-                return a.store.localeCompare(b.store);
-            }
-            return b.quantity - a.quantity;
-        });
-
-        aggregatedArray.forEach(it => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${it.store || ''}</td>
-                <td>${it.category || ''}</td>
-                <td>${it.product_name || ''}</td>
-                <td><strong>${it.quantity.toLocaleString()}</strong></td>
-            `;
-            tbody.appendChild(row);
-        });
-    } else {
-        // Khi chọn ngày cố định: Hiển thị từng dòng với đầy đủ thông tin
-        data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        data.forEach(it => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${it.date}</td>
-                <td>${it.store || ''}</td>
-                <td>${it.category || ''}</td>
-                <td>${it.product_name || it.product || ''}</td>
-                <td><strong>${it.quantity || 0}</strong></td>
-                <td>${it.employee || ''}</td>
-            `;
-            tbody.appendChild(row);
-        });
     }
-}
 
         async function fetchStoresForQty() {
             try {
