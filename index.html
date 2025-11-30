@@ -881,7 +881,7 @@ async function login(event) {
 
     try {
         // Gửi về backend để xác thực
-        const res = await fetch(`${API_URL}/api/login-owner, {
+        const res = await fetch(`${API_URL}/api/login-owner`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: userId, password: password })
