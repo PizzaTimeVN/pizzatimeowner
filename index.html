@@ -853,10 +853,6 @@ let currentUser = null;
 let currentPassword = null;
         /*******************************************/
 
-        const validUsers = {
-            'Bo@Phuc': 'Nhim=Khanh',
-            'Nhim@Khanh': 'Bo=Phuc'
-        };
 
         // Navigation Functions
         function showMainMenu() {
@@ -875,19 +871,33 @@ let currentPassword = null;
         }
 
         // Auth Functions
-        function login(event) {
+       // XÓA HOÀN TOÀN validUsers khỏi frontend
+// const validUsers = { ... };  ← XÓA DÒNG NÀY
+
+async function login(event) {
     event.preventDefault();
     const userId = document.getElementById('userId').value;
     const password = document.getElementById('userPassword').value;
 
-    if (validUsers[userId] && validUsers[userId] === password) {
-        currentUser = userId;  // LƯU USERNAME
-        currentPassword = password;  // LƯU PASSWORD
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').classList.remove('hidden');
-        document.getElementById('loginError').style.display = 'none';
-        initUIAfterLogin();
-    } else {
+    try {
+        // Gửi về backend để xác thực
+        const res = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: userId, password: password })
+        });
+
+        if (res.ok) {
+            currentUser = userId;
+            currentPassword = password;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').classList.remove('hidden');
+            initUIAfterLogin();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    } catch (err) {
+        document.getElementById('loginError').textContent = 'Lỗi: ' + err.message;
         document.getElementById('loginError').style.display = 'block';
     }
 }
